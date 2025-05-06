@@ -103,7 +103,7 @@ source eval.sh <DATASET> <PATH_TO_INFERENCE_RESULT>
 
 ### Generalized Content-Aware Layout Generation
 1. Data Preparation
-- Download the [PStylish7 dataset](https://drive.google.com/file/d/1e1mKrDEmBzcT1cGL5GEejOWPU6nGkUZ9/view?usp=sharing) and unzip it. For convenience, we provide all processed data along and thus no need to preprocess them again.
+- Download the [PStylish7 dataset](https://drive.google.com/file/d/1QzavL_nZEkw6jn6o2fl2HAmp2JKUw5_k/view?usp=sharing) and unzip it. For convenience, we provide all processed data along and thus no need to preprocess them again.
 - The file structure should be as follows
 ```
 └── AbsolutePath/to/DatasetDirectory
