@@ -1,6 +1,6 @@
 # DensityLayout: Density-Conditioned Layout GAN for Visual-Textual Presentation Designs
 
-This subrepository contains the Pytorch implementation for the design intent detection model, which is first preseneted in "Density-Conditioned Layout GAN for Visual-Textual Presentation Designs", ICIG 2023.
+This subrepository contains the Pytorch implementation for the design intent detection model, which is first preseneted in "[Density-Conditioned Layout GAN for Visual-Textual Presentation Designs](https://link.springer.com/chapter/10.1007/978-3-031-46308-2_16)", ICIG 2023.
 In PosterO [CVPR 2025], we re-implement the model with UNet (MiT-B1) backbone.
 
 # Train Design Intent Detection Model From Scratch

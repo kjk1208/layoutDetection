@@ -23,8 +23,7 @@ vllm==0.5.5
 CairoSVG==2.7.1
 numpy==1.26.2
 ```
-- Other Modules
-Please refer to the ```requirements.txt``` file.
+- Other Modules: Please refer to the ```requirements.txt``` file.
 
 ### Content-Aware Layout Generation
 1. Data Preparation
