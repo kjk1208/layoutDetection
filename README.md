@@ -83,7 +83,7 @@ cd design_intent_detect
 source test.sh <DATASET> <PATH_TO_WEIGHT>
 ```
 For example, ```source test.sh pku pku_128_1e-06_none/ckpt/design_intent_pku_epoch100.pth``` for the PKU PosterLayout dataset.
-- Noted that the detection results for ```all``` must be obtained before running the evaluation script below, as they are used for calculating the intent-aware metrics.
+- Noted that the detection results for ```all``` **must be obtained before running the evaluation script below**, as they are used for calculating the intent-aware metrics.
 
 3. Layout Generation by In-context Learning
 - Download the weights of [LLaMA 3.1-8B](https://huggingface.co/meta-llama/Llama-3.1-8B) or other Large Language Models (LLM).
