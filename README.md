@@ -108,6 +108,7 @@ source eval.sh <DATASET> <PATH_TO_INFERENCE_RESULT>
 └── AbsolutePath/to/DatasetDirectory
     └── PStylish7
         ├── chinese-poem
+        │   ├── image
         │   ├── predm_zs
         │   │   ├── features
         │   │   ├── design_intent_bbox_test.pt
