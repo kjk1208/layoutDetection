@@ -64,7 +64,7 @@ numpy==1.26.2
 ```
 source init_path.sh
 ```
-- Download the [weights](https://drive.google.com/drive/folders/1CUv13fZvySk1AV-r-7jbBX0wRCyVFFQG?usp=sharing) of the **design intent detection model** or train it from scratch following ```design_intent_detect/README.md```.
+- Download the [weights](https://drive.google.com/drive/folders/1CUv13fZvySk1AV-r-7jbBX0wRCyVFFQG?usp=sharing) of the **design intent detection model** or train it from scratch following the [instructions](design_intent_detect/README.md).
 - The file structure should be as follows:
 ```
 PosterO
