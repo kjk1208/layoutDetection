@@ -161,7 +161,7 @@ If our work is helpful for your research, please cite our papers:
 ```
 ```
 @inproceedings{Hsu-ICIG2023-densitylayout,
-    title={Densitylayout: Density-conditioned layout gan for visual-textual presentation designs},
+    title={Densitylayout: Density-conditioned Layout {GAN} for Visual-Textual Presentation Designs},
     author={Hsu, HsiaoYuan and He, Xiangteng and Peng, Yuxin},
     booktitle={Proceedings of the International Conference on Image and Graphics},
     pages={187--199},
