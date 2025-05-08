@@ -18,19 +18,18 @@ source pp.sh
 ```
 
 2. Training the Model
-- Specify the GPU IDs in the ```train.sh``` file and execute the following command:
+- Specify the GPU IDs in ```train.sh``` and execute the following command:
 ```
-source train.sh <dataset>
+source train.sh <DATASET>
 ```
 For example, ```source train.sh pku``` for the PKU PosterLayout dataset.
 
 3. Testing the Model
-- Specify the GPU IDs in the ```test.sh``` file and execute the following command:
+- Specify the GPU IDs in ```test.sh``` and execute the following command:
 ```
-cd design_intent_detect
 source test.sh <DATASET> <PATH_TO_WEIGHT>
 ```
-- With the default setting, the detection results will be saved under ```<dataset>_128_1e-06_none/result```, including
-    - maps: results will be saved under ```<dataset>_128_1e-06_none/result/<split>```
-    - features: results will be saved under ```<dataset>_128_1e-06_none/result/<dataset>_features```
-    - boxes (available areas): results will be saved as ```<dataset>_128_1e-06_none/result/design_intent_bbox_<split>.pt```
+- With the default setting, the detection results will be saved under ```<DATASET>_128_1e-06_none/result```, including
+    - maps: results will be saved under ```<DATASET>_128_1e-06_none/result/<split>```
+    - features: results will be saved under ```<DATASET>_128_1e-06_none/result/<DATASET>_features```
+    - boxes (available areas): results will be saved as ```<DATASET>_128_1e-06_none/result/design_intent_bbox_<split>.pt```

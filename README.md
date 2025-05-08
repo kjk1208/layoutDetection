@@ -60,7 +60,7 @@ numpy==1.26.2
 ```
 
 2. Design Intent Detection
-- Specify AbsolutePath/to/DatasetDirectory in the ```init_path.sh``` file and execute the following command:
+- Specify AbsolutePath/to/DatasetDirectory in ```init_path.sh``` and execute the following command:
 ```
 source init_path.sh
 ```
@@ -129,7 +129,7 @@ source eval.sh <DATASET> <PATH_TO_INFERENCE_RESULT>
 ```
 
 2. Layout Generation by In-context Learning
-- Specify AbsolutePath/to/DatasetDirectory in the ```init_path.sh``` file and execute the following command:
+- Specify AbsolutePath/to/DatasetDirectory in ```init_path.sh``` and execute the following command:
 ```
 source init_path.sh
 ```
