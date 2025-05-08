@@ -23,15 +23,15 @@ vllm==0.5.5
 CairoSVG==2.7.1
 numpy==1.26.2
 ```
-- Other Modules: Please refer to the ```requirements.txt``` file.
+- Other Modules: Please refer to ```requirements.txt```
 
 ### Content-Aware Layout Generation
 1. Data Preparation
 - Download the [PKU PosterLayout dataset](https://github.com/PKU-ICST-MIPL/PosterLayout-CVPR2023) and [CGL dataset](https://github.com/minzhouGithub/CGL-GAN) from their official websites. Only for convenience, we provide the [processed annotation files](https://drive.google.com/drive/folders/1GGh02Zv0sDjTai3FE0uNPntm-Asj8ioD?usp=sharing) with a uniform csv format. Please make sure to obtain the corresponding agreement before use.
-- Follow the instructions of [RALF](https://github.com/CyberAgentAILab/RALF) to preprocess the images, including
+- Follow the instructions of [RALF](https://github.com/CyberAgentAILab/RALF) to preprocess the images, including:
     - ```inpainting.py```: results should be put under ```input``` directory.
     - ```saliency_detection.py```: results should be put under ```saliency``` and ```saliency_sub``` directories.
-- The file structure should be as follows
+- The file structure should be as follows:
 ```
 ├── AbsolutePath/to/DatasetDirectory
 │   ├── all
@@ -60,12 +60,12 @@ numpy==1.26.2
 ```
 
 2. Design Intent Detection
-- Specify AbsolutePath/to/DatasetDirectory in the ```init_path.sh``` file and execute the following command.
+- Specify AbsolutePath/to/DatasetDirectory in the ```init_path.sh``` file and execute the following command:
 ```
 source init_path.sh
 ```
 - Download the [weights](https://drive.google.com/drive/folders/1CUv13fZvySk1AV-r-7jbBX0wRCyVFFQG?usp=sharing) of the **design intent detection model** or train it from scratch following ```design_intent_detect/README.md```.
-- The file structure should be as follows
+- The file structure should be as follows:
 ```
 PosterO
 └── design_intent_detect
@@ -77,7 +77,7 @@ PosterO
     │   └── ckpt/design_intent_cgl_epoch35.pth
     └── ...
 ```
-- Execute the following commands to obtain the design intent detection results. Noted that GPU IDs should be specified in the ```test.sh```.
+- Execute the following commands to obtain the design intent detection results. Noted that GPU IDs should be specified in ```test.sh```
 ```
 cd design_intent_detect
 source test.sh <DATASET> <PATH_TO_WEIGHT>
@@ -87,7 +87,7 @@ For example, ```source test.sh pku pku_128_1e-06_none/ckpt/design_intent_pku_epo
 
 3. Layout Generation by In-context Learning
 - Download the weights of [LLaMA 3.1-8B](https://huggingface.co/meta-llama/Llama-3.1-8B) or other Large Language Models (LLM).
-- Execute the following commands to obtain the inference results.
+- Execute the following commands to obtain the inference results:
 ```
 cd .. # go back to the PosterO directory
 source infer.sh <GPU_ID> <DATASET> <ABSOLUTE_PATH_TO_LLM_DIR> <EXPERIMENT_NAME>
@@ -95,7 +95,7 @@ source infer.sh <GPU_ID> <DATASET> <ABSOLUTE_PATH_TO_LLM_DIR> <EXPERIMENT_NAME>
 For example, ```source infer.sh 0 pku /home/mymachine/Meta-Llama-3.1-8B EXP1``` for the PKU PosterLayout dataset with the Meta-Llama-3.1-8B model. The inference results will be saved at ```PosterO/Meta-Llama-3.1-8B/pku/*EXP1*.pt```.
 
 4. Evaluation
-- Execute the following command to evaluate the generated layouts.
+- Execute the following command to evaluate the generated layouts:
 ```
 source eval.sh <DATASET> <PATH_TO_INFERENCE_RESULT>
 ```
@@ -103,7 +103,7 @@ source eval.sh <DATASET> <PATH_TO_INFERENCE_RESULT>
 ### Generalized Content-Aware Layout Generation
 1. Data Preparation
 - Download the [PStylish7 dataset](https://drive.google.com/file/d/1QzavL_nZEkw6jn6o2fl2HAmp2JKUw5_k/view?usp=sharing) and unzip it. For convenience, we provide all processed data along and thus no need to preprocess them again.
-- The file structure should be as follows
+- The file structure should be as follows:
 ```
 └── AbsolutePath/to/DatasetDirectory
     └── PStylish7
@@ -129,12 +129,12 @@ source eval.sh <DATASET> <PATH_TO_INFERENCE_RESULT>
 ```
 
 2. Layout Generation by In-context Learning
-- Specify AbsolutePath/to/DatasetDirectory in the ```init_path.sh``` file and execute the following command.
+- Specify AbsolutePath/to/DatasetDirectory in the ```init_path.sh``` file and execute the following command:
 ```
 source init_path.sh
 ```
 - Download the weights of [LLaMA 3.1-8B](https://huggingface.co/meta-llama/Llama-3.1-8B) or other Large Language Models (LLM).
-- Execute the following commands to obtain the inference results.
+- Execute the following commands to obtain the inference results:
 ```
 cd generalized_setting
 source infer.sh <GPU_ID> <ABSOLUTE_PATH_TO_LLM_DIR> <EXPERIMENT_NAME>
@@ -142,7 +142,7 @@ source infer.sh <GPU_ID> <ABSOLUTE_PATH_TO_LLM_DIR> <EXPERIMENT_NAME>
 For example, ```source infer.sh 0 /home/mymachine/Meta-Llama-3.1-8B EXP2``` for the PKU PosterLayout dataset with the Meta-Llama-3.1-8B model. The inference results will be saved at ```PosterO/generalized_setting/Meta-Llama-3.1-8B/<category_group>/*EXP2*.pt```.
 
 3. Evaluation
-- Execute the following command to evaluate the generated layouts.
+- Execute the following command to evaluate the generated layouts:
 ```
 source eval.sh <PATH_TO_INFERENCE_RESULT>
 ```
