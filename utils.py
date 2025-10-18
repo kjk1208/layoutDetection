@@ -21,7 +21,7 @@ def get_args_infer_dataset():
     parser = argparse.ArgumentParser()
 
     # dataset
-    parser.add_argument("--dataset_name", default='pku', type=str, choices=['pku', 'cgl'])
+    parser.add_argument("--dataset_name", default='pku', type=str, choices=['pku', 'cgl', 'all'])
     parser.add_argument("--design_intent_bbox_dir", type=str, required=True)
     parser.add_argument("--annotation_dir", type=str, required=True)
     parser.add_argument("--ext_save_name", type=str, default='')
@@ -79,6 +79,14 @@ def get_args_infer_dataset():
             2: {'type': 'text', 'color': 'green'},
             3: {'type': 'underlay', 'color': 'orange'},
             4: {'type': 'embellishment', 'color': 'blue'}
+        }
+    elif args.dataset_name == 'all':
+        # In 'all', we follow the PKU label schema (3 classes) as a default.
+        # If you need 4-class schema, set dataset_name to 'cgl' or run generalized_setting.
+        label_info = {
+            1: {'type': 'text', 'color': 'green'}, 
+            2: {'type': 'logo', 'color': 'red'},
+            3: {'type': 'underlay', 'color': 'orange'}
         }
         
     args.dataset_info = {

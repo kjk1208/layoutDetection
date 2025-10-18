@@ -61,6 +61,17 @@ def main():
                         'rea': 0.0118605712,
                         'cov': 0.4036413842,
                         'con': 0.0883146581,}
+        elif args.dataset_name == 'all':
+            # Use the mean of PKU and CGL provided averages as a reasonable default for 'all'
+            avg_metric = {'ove': 0.00063403125,
+                        'ali': 0.0030856804,
+                        'und_l': 0.9952696277,
+                        'und_s': 0.98913601425,
+                        'uti': 0.2111255376,
+                        'occ': 0.1272386633,
+                        'rea': 0.0113927748,
+                        'cov': 0.42253294195,
+                        'con': 0.09394137015,}
             
         metric_description_map = {'ove': 'Overlay',
                                 'ali': 'Alignment',

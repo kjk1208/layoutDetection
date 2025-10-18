@@ -1,1 +1,1 @@
-export DATASET_ROOT="/home/xuxiaoyuan/calg_dataset"
+export DATASET_ROOT="/home/kjk/movers/PosterO-CVPR2025/DATA/cgl_pku/"

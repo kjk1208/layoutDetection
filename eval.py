@@ -847,6 +847,9 @@ def run(root, base_dir, label_id, format_from, dataset, canvas_size=(513, 750)):
             
             if dataset == 'pku':
                 file = sorted(file, key=lambda x: int(x.split('.')[0]))
+            elif dataset == 'all':
+                # For 'all' dataset, use the same sorting as pku for consistency
+                file = sorted(file, key=lambda x: int(x.split('.')[0]))
             file = list(map(lambda x: os.path.join(root, split_name, x), file))
             print(f"Evaluating the {split_name} split with {len(file)} samples.")
             
@@ -883,7 +886,8 @@ def run_rank_postero(root, dataset_root, dataset, canvas_size=(513, 750), weight
     print(root)
     dataset_label = {
         'pku': {1: 'text', 2: 'logo', 3: 'underlay'},
-        'cgl': {1: 'logo', 2: 'text', 3: 'underlay', 4: 'embellishment'}
+        'cgl': {1: 'logo', 2: 'text', 3: 'underlay', 4: 'embellishment'},
+        'all': {1: 'text', 2: 'logo', 3: 'underlay'}  # Use same mapping as pku for 'all'
     }
     label_id = {v: k for k, v in dataset_label[dataset].items()}
     base_dir = {
@@ -907,7 +911,10 @@ def run_rank_postero(root, dataset_root, dataset, canvas_size=(513, 750), weight
     for split_name in split_names:
         gathered_split, select = gather_pSplit_N(splits[split_name], label_id, canvas_size, weight)
         print(f"Evaluating the {split_name} split with {len(gathered_split)} samples.")
-        
+        if len(gathered_split) == 0:
+            print(f"No samples in {split_name}; skip.")
+            continue
+
         batch = ptsToBatch(gathered_split)
         
         metric = {}
@@ -937,7 +944,7 @@ def run_rank_postero(root, dataset_root, dataset, canvas_size=(513, 750), weight
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dataset_root", type=str, required=True)
-    parser.add_argument("--dataset", type=str, choices=['pku', 'cgl'], required=True)
+    parser.add_argument("--dataset", type=str, choices=['pku', 'cgl', 'all'], required=True)
     parser.add_argument("--pt_path", type=str, required=True)
     args = parser.parse_args()
     args.weight = {'overlay': 50, 'alignment-LayoutGAN++': 20, 'density_score': -1}

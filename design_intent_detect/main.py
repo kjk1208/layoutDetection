@@ -46,7 +46,7 @@ def main():
     test_canvas_df = test_dataset.df
 
     # model
-    action = 'extract' if args.extract else 'forward'
+    action = 'extract' if args.extract else 'forward'    
     model_divs = design_intent_detector(act=args.model_dm_act, action=action)
     model_divs = model_divs.to(args.device)
     if args.infer:
@@ -61,11 +61,12 @@ def main():
     
     os.makedirs(os.path.join(args.exp_name, "ckpt"), exist_ok=True)
     if args.vis_preview:
-        os.makedirs(os.path.join(args.exp_name, "vis_preview"), exist_ok=True)
+        os.makedirs(os.path.join(args.exp_name, "vis_preview"), exist_ok=True)        
     elif args.extract:
+        args.save_dir = os.path.join(args.exp_name, "result", os.path.split(args.infer_ckpt)[-1][:-4], f"{args.dataset}_features", args.extract_split)
         if args.local_rank <= 0:
             print(f"Extracting {len(test_canvas_df)} samples.")
-        args.save_dir = os.path.join(args.exp_name, "result", os.path.split(args.infer_ckpt)[-1][:-4], f"{args.dataset}_features", args.extract_split)
+        # args.save_dir = os.path.join(args.exp_name, "result", os.path.split(args.infer_ckpt)[-1][:-4], f"{args.dataset}_features", args.extract_split)
         os.makedirs(args.save_dir, exist_ok=True)
     elif args.infer:
         if args.local_rank <= 0:

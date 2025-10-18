@@ -75,10 +75,15 @@ class LayoutPlanter:
         db_valid = torch.load(os.path.join(dataset_info['design_intent_bbox_dir'], "design_intent_bbox_valid.pt"), weights_only=False)
         db_test = torch.load(os.path.join(dataset_info['design_intent_bbox_dir'], "design_intent_bbox_test.pt"), weights_only=False)
 
-        # filter by dataset name
-        self.db_train = list(filter(lambda x: x['dataset'] == dataset_info['dataset_name'], db_train))
-        self.db_valid = list(filter(lambda x: x['dataset'] == dataset_info['dataset_name'], db_valid))
-        self.db_test = list(filter(lambda x: x['dataset'] == dataset_info['dataset_name'], db_test))
+        # filter by dataset name (skip filtering when dataset_name == 'all')
+        if dataset_info['dataset_name'] == 'all':
+            self.db_train = db_train
+            self.db_valid = db_valid
+            self.db_test = db_test
+        else:
+            self.db_train = list(filter(lambda x: x['dataset'] == dataset_info['dataset_name'], db_train))
+            self.db_valid = list(filter(lambda x: x['dataset'] == dataset_info['dataset_name'], db_valid))
+            self.db_test = list(filter(lambda x: x['dataset'] == dataset_info['dataset_name'], db_test))
         
         for i in range(len(self.db_train)):
             for j in range(len(self.db_train[i]['den_box'])):
@@ -189,7 +194,14 @@ class LayoutPlanter:
     def getHierarchy(self, subdf, preview=False):
         clses = subdf.cls_elem.astype(int).to_list()
         boxes = [eval(b) for b in subdf.box_elem]
+        # remove background/invalid class (0) if present
+        if 0 in clses:
+            keep = [i for i, c in enumerate(clses) if c != 0]
+            clses = [clses[i] for i in keep]
+            boxes = [boxes[i] for i in keep]
         nodes = [TreeNode(c, b) for c, b in zip(clses, boxes)]
+        if len(nodes) == 0:
+            return []
         nodes = sorted(nodes, key=lambda x: (-x.cls, x.box[0], x.box[1], -x.box[2], -x.box[3]))
         clses = [node.cls for node in nodes]
         boxes = torch.stack([node.box for node in nodes])
@@ -248,6 +260,11 @@ class LayoutPlanter:
     def getPlainSVG(self, subdf, label_info, index, indent="\t", injection=""):
         clses = subdf.cls_elem.astype(int).to_list()
         boxes = np.array([eval(b) for b in subdf.box_elem])
+        # remove class 0 if present
+        if any(c == 0 for c in clses):
+            keep = [i for i, c in enumerate(clses) if c != 0]
+            clses = [clses[i] for i in keep]
+            boxes = boxes[keep]
         boxes[:, 2] -= boxes[:, 0]
         boxes[:, 3] -= boxes[:, 1]
     
@@ -302,6 +319,8 @@ class LayoutPlanter:
         else:
             injection, inject_area = self.getAvailableBbox(design_intent_dict)
             
+        if len(hierarchy) == 0:
+            return self.getSVGHead('<svg></svg>'), '<svg></svg>'
         svg = self.getNestedSVG(hierarchy, label_info, index, injection=injection)
         head = self.getSVGHead(svg, inject_area)
         
@@ -480,6 +499,8 @@ class LayoutPlanter:
         cls_elem = []
         box_elem = []
         for rect in rects:
+            if rect[0] == '0':
+                continue
             cls_elem.append(rect[0])
             box_elem.append([max(0, int(float(r.replace('"', '')))) for r in rect[1:]])
 
