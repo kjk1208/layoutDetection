@@ -17,6 +17,7 @@ EPOCHS=${4:-"101"}
 BATCH_SIZE=${5:-"16"}
 TEST_INTERVAL=${6:-"20"}
 CHECKPOINT_INTERVAL=${7:-"20"}
+SKIP_TRAINING=${8:-"false"}
 
 # Parse learning rates
 IFS=',' read -ra LR_ARRAY <<< "$LEARNING_RATES"
@@ -31,12 +32,15 @@ echo "Epochs: $EPOCHS"
 echo "Batch Size: $BATCH_SIZE"
 echo "Test Interval: $TEST_INTERVAL"
 echo "Checkpoint Interval: $CHECKPOINT_INTERVAL"
+echo "Skip Training: $SKIP_TRAINING"
 echo "=========================================="
 
 # Function to run single experiment
 run_single_experiment() {
     local LEARNING_RATE="$1"
-    local EXP_NAME="${DATASET}_${BATCH_SIZE}_${LEARNING_RATE}_${MODEL_DM_ACT}"
+    # Remove any spaces and convert to safe filename format
+    local SAFE_LEARNING_RATE=$(echo "$LEARNING_RATE" | tr -d ' ' | sed 's/[^a-zA-Z0-9._-]/_/g')
+    local EXP_NAME="${DATASET}_${BATCH_SIZE}_${SAFE_LEARNING_RATE}_${MODEL_DM_ACT}"
     local LAST_EPOCH=$((EPOCHS - 1))
     
     # Set paths
@@ -55,14 +59,15 @@ run_single_experiment() {
     echo "Learning Rate: $LEARNING_RATE"
     echo "=========================================="
 
-    # Step 1: Training
-    echo ""
-    echo "STEP 1: TRAINING"
-    echo "=================="
-    echo "Starting training with $EPOCHS epochs..."
+    # Step 1: Training (optional)
+    if [ "$SKIP_TRAINING" != "true" ]; then
+        echo ""
+        echo "STEP 1: TRAINING"
+        echo "=================="
+        echo "Starting training with $EPOCHS epochs..."
 
-    # Create a temporary train script with specific parameters
-    cat > temp_train.sh << EOF
+        # Create a temporary train script with specific parameters
+        cat > temp_train.sh << EOF
 export CUDA_VISIBLE_DEVICES=6
 CUDA_VISIBLE_DEVICES=6 python -u main.py \\
   --dataset_root \$DATASET_ROOT \\
@@ -75,18 +80,32 @@ CUDA_VISIBLE_DEVICES=6 python -u main.py \\
   --checkpoint_interval $CHECKPOINT_INTERVAL
 EOF
 
-    chmod +x temp_train.sh
-    source temp_train.sh
-    TRAIN_EXIT_CODE=$?
+        chmod +x temp_train.sh
+        source temp_train.sh
+        TRAIN_EXIT_CODE=$?
 
-    if [ $TRAIN_EXIT_CODE -ne 0 ]; then
-        echo "ERROR: Training failed with exit code $TRAIN_EXIT_CODE"
+        if [ $TRAIN_EXIT_CODE -ne 0 ]; then
+            echo "ERROR: Training failed with exit code $TRAIN_EXIT_CODE"
+            rm -f temp_train.sh 2>/dev/null || true
+            return 1
+        fi
+
+        echo "Training completed successfully!"
         rm -f temp_train.sh 2>/dev/null || true
-        return 1
+    else
+        echo ""
+        echo "STEP 1: TRAINING (SKIPPED)"
+        echo "==========================="
+        echo "Training step skipped as requested."
+        
+        # Check if checkpoint exists
+        if [ ! -f "$CKPT_PATH" ]; then
+            echo "ERROR: Checkpoint file does not exist: $CKPT_PATH"
+            echo "Please ensure the model has been trained or provide the correct checkpoint path."
+            return 1
+        fi
+        echo "Using existing checkpoint: $CKPT_PATH"
     fi
-
-    echo "Training completed successfully!"
-    rm -f temp_train.sh 2>/dev/null || true
 
     # Step 2: Testing/Inference
     echo ""
@@ -100,7 +119,7 @@ export CUDA_VISIBLE_DEVICES=6
 SPLIT=("test" "train")
 INFER_CSV=("\${SPLIT[@]}")
 DATASET=$DATASET
-INFER_CKPT=$CKPT_PATH
+INFER_CKPT="$CKPT_PATH"
 MODEL_DM_ACT=$MODEL_DM_ACT
 BATCH_SIZE=$BATCH_SIZE
 
