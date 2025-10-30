@@ -106,3 +106,44 @@ class design_intent_detector(nn.Module):
         seg = self.model.segmentation_head(dec_out)
         seg = self.act(seg)
         return seg
+
+
+class design_intent_detector_simple(nn.Module):
+    """Hint path 없이 base path만 사용하는 단순한 design intent detector"""
+    def __init__(self, act='Sigmoid', action='forward'):
+        super(design_intent_detector_simple, self).__init__()
+        # Base path (image) UNet만 사용
+        self.model = smp.Unet(
+            encoder_name="mit_b1",
+            encoder_weights="imagenet",
+            in_channels=3,
+            classes=1,
+        )
+
+        if act == 'sigmoid' or act == 'Sigmoid':
+            self.act = nn.Sigmoid()
+        elif act == 'relu' or act == 'ReLU':
+            self.act = nn.ReLU()
+        elif act == 'none' or act == 'None':
+            self.act = nn.Identity()
+        else:
+            raise NotImplementedError(act)
+        
+        if action == 'forward':
+            self.forward = self.feed_forward
+        elif action == 'extract':
+            self.forward = self.encode_feature
+        else:
+            raise NotImplementedError(action)
+    
+    def encode_feature(self, x: torch.Tensor, hint: torch.Tensor = None):
+        """Feature extraction - hint는 무시됨"""
+        feats = self.model.encoder(x)
+        return feats[-1]  # B, 512, 7, 7
+
+    def feed_forward(self, x: torch.Tensor, hint: torch.Tensor = None):
+        """Forward pass - hint는 무시됨"""
+        # Hint path 없이 단순히 base UNet만 사용
+        output = self.model(x)
+        output = self.act(output)
+        return output

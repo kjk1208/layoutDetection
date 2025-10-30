@@ -1,5 +1,6 @@
 export CUDA_VISIBLE_DEVICES=6
 DATASET=$1
+MODEL_TYPE=${2:-design_intent_detector}  # 기본값: design_intent_detector
 BATCH_SIZE=32
 
 if [ "$DATASET" = "pku" ]; then
@@ -35,6 +36,7 @@ CUDA_VISIBLE_DEVICES=6 python -u main.py  \
   --batch_size $BATCH_SIZE \
   --learning_rate 1e-5 \
   --model_dm_act "relu" \
+  --model_type $MODEL_TYPE \
   --epoch $EPOCH \
 
 CUDA_VISIBLE_DEVICES=6 python -u main.py  \
@@ -43,6 +45,7 @@ CUDA_VISIBLE_DEVICES=6 python -u main.py  \
   --batch_size $BATCH_SIZE \
   --learning_rate 1e-3 \
   --model_dm_act "none" \
+  --model_type $MODEL_TYPE \
   --epoch $EPOCH \
 
 

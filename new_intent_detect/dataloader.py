@@ -12,6 +12,8 @@ class closedm(Dataset):
         #test셋에는 closedm이 없어서 이 if문에서 걸러줌줌
         # 힌트 파일명 접미사 설정 (기본: _mask_pred)
         self.hint_suffix = getattr(args, "saliency_suffix", "_mask_pred")
+        # simple 모델일 때는 saliency map을 사용하지 않음
+        self.use_saliency = getattr(args, "model_type", "design_intent_detector") != "design_intent_detector_simple"
 
         if args.dataset == "all":
             if split == "test":
@@ -112,10 +114,16 @@ class closedm(Dataset):
             
         canvas = cv2.imread(canvas_path)
         canvas = cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB)
-        # 힌트는 그레이스케일로 로드
-        hint = cv2.imread(hint_path, 0)
+        
+        if self.use_saliency:
+            # 힌트는 그레이스케일로 로드
+            hint = cv2.imread(hint_path, 0)
+            hint_tensor = self.transform_hint(hint).float()
+        else:
+            # saliency map을 사용하지 않는 경우 더미 힌트 생성
+            hint_tensor = torch.zeros(1, 224, 224).float()
 
         if self.train:
-            return self.transform_canvas(canvas).float(), self.transform_hint(hint).float(), self.transform_closedm(closedm).float()
+            return self.transform_canvas(canvas).float(), hint_tensor, self.transform_closedm(closedm).float()
         else:
-            return self.transform_canvas(canvas).float(), self.transform_hint(hint).float(), idx
+            return self.transform_canvas(canvas).float(), hint_tensor, idx

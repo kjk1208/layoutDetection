@@ -3,7 +3,7 @@ import torch.distributed as dist
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.nn.parallel import DistributedDataParallel as DDP
-from model import design_intent_detector
+from model import design_intent_detector, design_intent_detector_simple
 from segmentation_models_pytorch.encoders import get_preprocessing_fn
 from dataloader import closedm
 from runner import train, test, get_features
@@ -111,7 +111,10 @@ def main():
 
     # model
     action = 'extract' if args.extract else 'forward'    
-    model_divs = design_intent_detector(act=args.model_dm_act, action=action)
+    if args.model_type == 'design_intent_detector_simple':
+        model_divs = design_intent_detector_simple(act=args.model_dm_act, action=action)
+    else:  # default: design_intent_detector
+        model_divs = design_intent_detector(act=args.model_dm_act, action=action)
     model_divs = model_divs.to(args.device)
     if args.infer:
         model_divs.load_state_dict(torch.load(args.infer_ckpt, weights_only=True))

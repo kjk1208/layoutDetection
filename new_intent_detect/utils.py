@@ -45,6 +45,7 @@ def get_args():
 
     # model
     parser.add_argument("--model_dm_act", default='sigmoid', type=str, choices=['sigmoid', 'relu', 'none'])
+    parser.add_argument("--model_type", default='design_intent_detector', type=str, choices=['design_intent_detector', 'design_intent_detector_simple'])
     parser.add_argument("--infer_ckpt", default='', type=str)
 
     # bool
@@ -102,9 +103,9 @@ def get_args():
                 raise ValueError(f"Invalid model_dm_act inferred from exp_name: {args.model_dm_act}")
     else:
         if args.exp_name == '':
-            args.exp_name = f"{args.dataset}_{args.batch_size}_{args.learning_rate}_{args.model_dm_act}"
+            args.exp_name = f"{args.dataset}_{args.batch_size}_{args.learning_rate}_{args.model_dm_act}_{args.model_type}"
         else:
-            args.exp_name = f"{args.exp_name}_{args.dataset}_{args.batch_size}_{args.learning_rate}_{args.model_dm_act}"
+            args.exp_name = f"{args.exp_name}_{args.dataset}_{args.batch_size}_{args.learning_rate}_{args.model_dm_act}_{args.model_type}"
         if args.use_con_loss:
             args.exp_name += "_conloss"
     return args

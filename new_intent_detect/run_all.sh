@@ -12,35 +12,42 @@ fi
 # Default values
 DATASET=${1:-"pku"}
 LEARNING_RATES=${2:-"1e-3,1e-4,1e-5,1e-6"}
-MODEL_DM_ACT=${3:-"relu"}
-EPOCHS=${4:-"101"}
-BATCH_SIZE=${5:-"16"}
-TEST_INTERVAL=${6:-"20"}
-CHECKPOINT_INTERVAL=${7:-"20"}
-SKIP_TRAINING=${8:-"false"}
+# Accept multiple activations as comma-separated (e.g., "relu,sigmoid,none")
+MODEL_DM_ACTS=${3:-"relu"}
+MODEL_TYPE=${4:-"design_intent_detector"}
+EPOCHS=${5:-"101"}
+BATCH_SIZE=${6:-"16"}
+TEST_INTERVAL=${7:-"20"}
+CHECKPOINT_INTERVAL=${8:-"20"}
+SKIP_TRAINING=${9:-"false"}
+CUDA_DEVICE=${10:-"6"}
 
-# Parse learning rates
+# Parse learning rates and activations
 IFS=',' read -ra LR_ARRAY <<< "$LEARNING_RATES"
+IFS=',' read -ra ACT_ARRAY <<< "$MODEL_DM_ACTS"
 
 echo "=========================================="
 echo "COMPLETE PIPELINE EXECUTION"
 echo "=========================================="
 echo "Dataset: $DATASET"
 echo "Learning Rates: $LEARNING_RATES"
-echo "Model Activation: $MODEL_DM_ACT"
+echo "Model Activations: $MODEL_DM_ACTS"
+echo "Model Type: $MODEL_TYPE"
 echo "Epochs: $EPOCHS"
 echo "Batch Size: $BATCH_SIZE"
 echo "Test Interval: $TEST_INTERVAL"
 echo "Checkpoint Interval: $CHECKPOINT_INTERVAL"
 echo "Skip Training: $SKIP_TRAINING"
+echo "CUDA Device: $CUDA_DEVICE"
 echo "=========================================="
 
 # Function to run single experiment
 run_single_experiment() {
     local LEARNING_RATE="$1"
+    local MODEL_DM_ACT="$2"
     # Remove any spaces and convert to safe filename format
     local SAFE_LEARNING_RATE=$(echo "$LEARNING_RATE" | tr -d ' ' | sed 's/[^a-zA-Z0-9._-]/_/g')
-    local EXP_NAME="${DATASET}_${BATCH_SIZE}_${SAFE_LEARNING_RATE}_${MODEL_DM_ACT}"
+    local EXP_NAME="${DATASET}_${BATCH_SIZE}_${SAFE_LEARNING_RATE}_${MODEL_DM_ACT}_${MODEL_TYPE}"
     local LAST_EPOCH=$((EPOCHS - 1))
     
     # Set paths
@@ -57,6 +64,7 @@ run_single_experiment() {
     echo "=========================================="
     echo "RUNNING EXPERIMENT: $EXP_NAME"
     echo "Learning Rate: $LEARNING_RATE"
+    echo "Activation: $MODEL_DM_ACT"
     echo "=========================================="
 
     # Step 1: Training (optional)
@@ -68,13 +76,14 @@ run_single_experiment() {
 
         # Create a temporary train script with specific parameters
         cat > temp_train.sh << EOF
-export CUDA_VISIBLE_DEVICES=6
-CUDA_VISIBLE_DEVICES=6 python -u main.py \\
+export CUDA_VISIBLE_DEVICES=$CUDA_DEVICE
+CUDA_VISIBLE_DEVICES=$CUDA_DEVICE python -u main.py \\
   --dataset_root \$DATASET_ROOT \\
   --dataset $DATASET \\
   --batch_size $BATCH_SIZE \\
   --learning_rate $LEARNING_RATE \\
   --model_dm_act "$MODEL_DM_ACT" \\
+  --model_type "$MODEL_TYPE" \\
   --epoch $EPOCHS \\
   --test_interval $TEST_INTERVAL \\
   --checkpoint_interval $CHECKPOINT_INTERVAL
@@ -115,15 +124,18 @@ EOF
 
     # Create a temporary test script
     cat > temp_test.sh << EOF
-export CUDA_VISIBLE_DEVICES=6
+export CUDA_VISIBLE_DEVICES=$CUDA_DEVICE
 SPLIT=("test" "train")
 INFER_CSV=("\${SPLIT[@]}")
 DATASET=$DATASET
 INFER_CKPT="$CKPT_PATH"
 MODEL_DM_ACT=$MODEL_DM_ACT
+MODEL_TYPE=$MODEL_TYPE
 BATCH_SIZE=$BATCH_SIZE
 
 echo "[DEBUG] model_dm_act: \$MODEL_DM_ACT"
+echo "[DEBUG] model_type: \$MODEL_TYPE"
+echo "[DEBUG] cuda_device: $CUDA_DEVICE"
 echo "Inference on \$DATASET with \$INFER_CKPT"
 
 # maps (single GPU)
@@ -133,6 +145,7 @@ for i in {0..1}; do
         --infer --infer_ckpt \$INFER_CKPT \\
         --infer_csv "\${INFER_CSV[i]}" \\
         --model_dm_act=\$MODEL_DM_ACT \\
+        --model_type=\$MODEL_TYPE \\
         --batch_size \$BATCH_SIZE
 done
 
@@ -143,6 +156,7 @@ for i in {0..1}; do
         --extract --extract_split "\${SPLIT[i]}" --infer_csv "\${INFER_CSV[i]}" \\
         --infer --infer_ckpt \$INFER_CKPT \\
         --model_dm_act=\$MODEL_DM_ACT \\
+        --model_type=\$MODEL_TYPE \\
         --batch_size \$BATCH_SIZE
 done
 
@@ -188,7 +202,7 @@ EOF
     echo "Prediction directory: $PRED_DIR"
     echo "GT directory: $GT_DIR"
 
-    CUDA_VISIBLE_DEVICES=6 python eval.py \
+    CUDA_VISIBLE_DEVICES=$CUDA_DEVICE python eval.py \
         --pred_dir "$PRED_DIR" \
         --gt_dir "$GT_DIR" \
         --threshold 0.5 \
@@ -214,24 +228,26 @@ EOF
     echo "=========================================="
 }
 
-# Run experiments for each learning rate
-TOTAL_EXPERIMENTS=${#LR_ARRAY[@]}
+# Run experiments for each activation and learning rate
+TOTAL_EXPERIMENTS=$(( ${#ACT_ARRAY[@]} * ${#LR_ARRAY[@]} ))
 CURRENT_EXPERIMENT=0
 
-for LEARNING_RATE in "${LR_ARRAY[@]}"; do
-    CURRENT_EXPERIMENT=$((CURRENT_EXPERIMENT + 1))
-    echo ""
-    echo "=========================================="
-    echo "EXPERIMENT $CURRENT_EXPERIMENT/$TOTAL_EXPERIMENTS"
-    echo "=========================================="
-    
-    run_single_experiment "$LEARNING_RATE"
-    EXPERIMENT_EXIT_CODE=$?
-    
-    if [ $EXPERIMENT_EXIT_CODE -ne 0 ]; then
-        echo "ERROR: Experiment $CURRENT_EXPERIMENT failed!"
-        exit 1
-    fi
+for MODEL_DM_ACT in "${ACT_ARRAY[@]}"; do
+    for LEARNING_RATE in "${LR_ARRAY[@]}"; do
+        CURRENT_EXPERIMENT=$((CURRENT_EXPERIMENT + 1))
+        echo ""
+        echo "=========================================="
+        echo "EXPERIMENT $CURRENT_EXPERIMENT/$TOTAL_EXPERIMENTS"
+        echo "=========================================="
+        
+        run_single_experiment "$LEARNING_RATE" "$MODEL_DM_ACT"
+        EXPERIMENT_EXIT_CODE=$?
+        
+        if [ $EXPERIMENT_EXIT_CODE -ne 0 ]; then
+            echo "ERROR: Experiment $CURRENT_EXPERIMENT failed!"
+            exit 1
+        fi
+    done
 done
 
 echo ""
