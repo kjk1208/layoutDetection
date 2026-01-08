@@ -45,7 +45,12 @@ def get_args():
 
     # model
     parser.add_argument("--model_dm_act", default='sigmoid', type=str, choices=['sigmoid', 'relu', 'none'])
-    parser.add_argument("--model_type", default='design_intent_detector', type=str, choices=['design_intent_detector', 'design_intent_detector_simple'])
+    parser.add_argument(
+        "--model_type",
+        default='crossattn_encoder_decoder',
+        type=str,
+        choices=['crossattn_encoder_decoder', 'design_intent_detector_simple'],
+    )
     parser.add_argument("--infer_ckpt", default='', type=str)
 
     # bool

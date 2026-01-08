@@ -3,8 +3,9 @@
 # Segmentation Evaluation Script
 # Usage: ./run_eval.sh [pred_dir] [gt_dir] [threshold] [resize_method]
 
-# Default values
-PRED_DIR=${1:-"pku_16_0.001_relu/result/epoch100/test"}
+# Default values (UPDATED for crossattn encoder-only model, batch_size=24)
+# NOTE: pred_dir는 학습 시 생성된 경로에 맞게 수정하세요.
+PRED_DIR=${1:-"pku_24_0.001_relu_crossattn_encoder_decoder/result/epoch100/test"}
 GT_DIR=${2:-"/home/kjk/movers/PosterO-CVPR2025/DATA/cgl_pku/pku/image/test/closedm"}
 THRESHOLD=${3:-0.5}
 RESIZE_METHOD=${4:-"bilinear"}

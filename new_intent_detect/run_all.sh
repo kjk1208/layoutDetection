@@ -11,12 +11,14 @@ fi
 
 # Default values
 DATASET=${1:-"pku"}
-LEARNING_RATES=${2:-"1e-3,1e-4,1e-5,1e-6"}
+# LEARNING_RATES=${2:-"1e-3,1e-4,1e-5,1e-6"}
+#LEARNING_RATES=${2:-"1e-3,1e-4,1e-5,1e-6"}
+LEARNING_RATES=${2:-"1e-3"}
 # Accept multiple activations as comma-separated (e.g., "relu,sigmoid,none")
-MODEL_DM_ACTS=${3:-"relu"}
-MODEL_TYPE=${4:-"design_intent_detector"}
+MODEL_DM_ACTS=${3:-"none,sigmoid"}
+MODEL_TYPE=${4:-"crossattn_encoder_decoder"}
 EPOCHS=${5:-"101"}
-BATCH_SIZE=${6:-"16"}
+BATCH_SIZE=${6:-"24"}
 TEST_INTERVAL=${7:-"20"}
 CHECKPOINT_INTERVAL=${8:-"20"}
 SKIP_TRAINING=${9:-"false"}
@@ -125,6 +127,7 @@ EOF
     # Create a temporary test script
     cat > temp_test.sh << EOF
 export CUDA_VISIBLE_DEVICES=$CUDA_DEVICE
+DATASET_ROOT=$DATASET_ROOT
 SPLIT=("test" "train")
 INFER_CSV=("\${SPLIT[@]}")
 DATASET=$DATASET

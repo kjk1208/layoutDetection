@@ -35,7 +35,8 @@ class PassThrough(nn.Module):
         return q_feat
 
 class design_intent_detector(nn.Module):
-    def __init__(self, act='Sigmoid', action='forward', attn_heads: int = 8, attn_dropout: float = 0.0):
+    def __init__(self, act='Sigmoid', action='forward', attn_heads: int = 8, attn_dropout: float = 0.0,
+                 use_decoder_attn: bool = False):
         super(design_intent_detector, self).__init__()
         # Base path (image) UNet
         self.model = smp.Unet(
@@ -47,14 +48,19 @@ class design_intent_detector(nn.Module):
         # Hint path encoder (saliency_sub). mit_b1는 in_channels≠3 미지원 → 1채널 힌트는 3채널로 반복해 입력
         self.hint_encoder = get_encoder("mit_b1", in_channels=3, depth=5, weights=None)
 
-        # Cross-attention at multi-scale (align with encoder out channels)
+        # Cross-attention at encoder multi-scale (align with encoder out channels)
         self.encoder_channels = list(self.model.encoder.out_channels)
         # Some encoders may report 0 or None for certain stages; use PassThrough for those
-        self.cross_attn = nn.ModuleList([
+        self.cross_attn_encoder = nn.ModuleList([
             (CrossAttentionBlock(channels=c, num_heads=attn_heads, dropout=attn_dropout)
              if isinstance(c, int) and c > 0 else PassThrough())
             for c in self.encoder_channels[1:]  # skip input image level
         ])
+
+        # NOTE:
+        # decoder는 기본 UNet decoder를 그대로 사용하고,
+        # cross-attention은 encoder 단계(멀티스케일 + bottleneck)에만 적용합니다.
+        # `use_decoder_attn` 인자는 하위 호환성을 위해 남겨두지만 현재는 사용하지 않습니다.
 
         if act == 'sigmoid' or act == 'Sigmoid':
             self.act = nn.Sigmoid()
@@ -81,16 +87,16 @@ class design_intent_detector(nn.Module):
         hint_feats = self.hint_encoder(x_hint)  # same length
         fused = [img_feats[0]]
         for i in range(1, len(img_feats)):
-            fused_feat = self.cross_attn[i - 1](img_feats[i], hint_feats[i])
+            fused_feat = self.cross_attn_encoder[i - 1](img_feats[i], hint_feats[i])
             fused.append(fused_feat)
-        return fused
-
+        return fused, hint_feats
+    
     def encode_feature(self, x: torch.Tensor, hint: torch.Tensor = None):
         if hint is None:
             feats = self.model.encoder(x)
             return feats[-1]  # B, 512, 7, 7
         else:
-            fused = self._encode_both(x, hint)
+            fused, _ = self._encode_both(x, hint)
             return fused[-1]
 
     def feed_forward(self, x: torch.Tensor, hint: torch.Tensor = None):
@@ -99,13 +105,31 @@ class design_intent_detector(nn.Module):
             output = self.model(x)
             output = self.act(output)
             return output
-        # Two-path with cross-attention fusion
-        fused = self._encode_both(x, hint)
-        # Run decoder + head manually using fused encoder features
+        # Two-path with cross-attention fusion (encoder + bottleneck only)
+        fused, _ = self._encode_both(x, hint)
+        # Decoder는 기본 UNet decoder를 그대로 사용
         dec_out = self.model.decoder(*fused)
+        
         seg = self.model.segmentation_head(dec_out)
         seg = self.act(seg)
         return seg
+
+
+class crossattn_encoder_decoder(design_intent_detector):
+    """
+    이미지 + 힌트에 대해 encoder 단계(멀티스케일 + bottleneck)에서만 cross attention을 사용하는 모델.
+    현재는 `design_intent_detector`와 동일한 구조이며, 명시적인 model_type 구분을 위해 래퍼 클래스로 유지합니다.
+    """
+
+    def __init__(self, act: str = "Sigmoid", action: str = "forward",
+                 attn_heads: int = 8, attn_dropout: float = 0.0):
+        super().__init__(
+            act=act,
+            action=action,
+            attn_heads=attn_heads,
+            attn_dropout=attn_dropout,
+            use_decoder_attn=False,
+        )
 
 
 class design_intent_detector_simple(nn.Module):
